@@ -119,7 +119,7 @@ export default function WordReveal({
 
           {/* Le mot secret */}
           <div className="w-full p-6 brutal-border brutal-border-zinc bg-zinc-900 border border-zinc-800 brutal-shadow-zinc relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
             <p className="text-xs text-zinc-500 font-mono mb-2 uppercase tracking-widest relative z-10">
               Ton mot secret
             </p>
