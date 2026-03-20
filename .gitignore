@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# PartyKit (Cache & Build)
+.partykit/
+
 # vercel
 .vercel
 
