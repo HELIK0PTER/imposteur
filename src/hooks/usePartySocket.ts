@@ -8,7 +8,7 @@ export type OnlineGameState = {
   phase: GamePhase | "voting" | "turn_typing" | "round_voting";
   role?: Role;
   word?: string;
-  players: { id: string; name: string; isHost: boolean; score: number; lastPoints: number }[];
+  players: { id: string; name: string; isHost: boolean; score: number; lastPoints: number; role?: string; word?: string }[];
   votes: Array<[string, string]>;
   myId?: string;
   turnOrder: string[];

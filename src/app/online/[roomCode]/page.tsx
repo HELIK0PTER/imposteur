@@ -610,7 +610,7 @@ export default function OnlineRoomPage() {
             <div className="w-full space-y-3 mt-4">
               <h3 className="text-xs uppercase font-mono tracking-widest text-zinc-500">Classement & Rôles</h3>
               <div className="flex flex-col gap-2">
-                {players.sort((a,b) => (b.score || 0) - (a.score || 0)).map(p => (
+                {[...players].sort((a,b) => (b.score || 0) - (a.score || 0)).map(p => (
                   <div key={p.id} className={`flex flex-col items-start p-3 bg-zinc-900 border rounded-xl gap-1 ${p.id === gameState.eliminatedPlayerId ? "border-red-500/50 bg-red-500/5" : "border-zinc-800"}`}>
                     <div className="flex justify-between w-full items-center">
                       <div className="flex flex-col">
@@ -621,7 +621,7 @@ export default function OnlineRoomPage() {
                         {(p.role || "???").toUpperCase()}
                       </span>
                     </div>
-                    {(p as any).word && <span className="text-xs font-bold text-zinc-500 italic">Mot: {(p as any).word}</span>}
+                    {p.word && <span className="text-xs font-bold text-zinc-500 italic">Mot: {p.word}</span>}
                   </div>
                 ))}
               </div>
