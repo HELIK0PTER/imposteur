@@ -329,18 +329,20 @@ export default class ImposteurServer implements Party.Server {
     const mrWhiteId = playerIds.length >= 4 ? playerIds[1] : null;
 
     const wordPair = getRandomWordPair();
+    // Aléatoire : on décide si on inverse les rôles des mots pour cette partie
+    const civilWord = Math.random() > 0.5 ? wordPair.civilian : wordPair.impostor;
+    const impostorWord = civilWord === wordPair.civilian ? wordPair.impostor : wordPair.civilian;
 
     for (const [id, player] of this.players.entries()) {
-      
       if (id === impostorId) {
         player.role = "Imposteur";
-        player.word = wordPair.impostor;
+        player.word = impostorWord;
       } else if (id === mrWhiteId) {
         player.role = "Mr. White";
         player.word = null;
       } else {
         player.role = "Civil";
-        player.word = wordPair.civilian;
+        player.word = civilWord;
       }
     }
     // Shuffle intelligent pour l'ordre de passage (turnOrder)

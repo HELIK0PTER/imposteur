@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "@/hooks/usePartySocket";
 import { useEffect, useState } from "react";
-import { Users, Play, Eye, EyeOff, Gavel, Skull, Copy, QrCode, X, ArrowLeft, Share2 } from "lucide-react";
+import { Users, Play, Eye, EyeOff, Gavel, Skull, Copy, QrCode, X, ArrowLeft, Share2, Pencil } from "lucide-react";
 import QRCode from "react-qr-code";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
@@ -160,7 +160,7 @@ export default function OnlineRoomPage() {
 
       {/* Modal Fixation du Pseudo (toujours visible si nécessaire) */}
       {showNameModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 backdrop-blur-md p-4">
+        <div className="fixed inset-0 z-100 flex items-start justify-center pt-[10svh] pb-8 bg-black/95 backdrop-blur-md p-4 overflow-y-auto sm:items-center sm:pt-0">
           <motion.div 
              initial={{ opacity: 0, scale: 0.9 }}
              animate={{ opacity: 1, scale: 1 }}
@@ -262,8 +262,24 @@ export default function OnlineRoomPage() {
                     <span className="w-7 h-7 flex items-center justify-center rounded-lg bg-violet-500/20 text-violet-400 text-xs font-bold font-mono">
                       {idx + 1}
                     </span>
-                    <span className="text-white font-medium flex-1">
-                      {p.name} {p.id === myId && "(Toi)"} {p.isHost && "👑"}
+                    <span className="text-white font-medium flex-1 flex items-center gap-1">
+                      {p.name} 
+                      {p.id === myId && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-zinc-500 text-xs font-normal">(Toi)</span>
+                          <button
+                            onClick={() => {
+                              setTempName(p.name || "");
+                              setShowNameModal(true);
+                            }}
+                            className="p-1 hover:bg-zinc-800 rounded transition-colors text-violet-400"
+                            title="Modifier mon pseudo"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                      {p.isHost && "👑"}
                     </span>
                     <div className="px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-neon-yellow text-[10px] font-mono font-bold">
                       {p.score || 0} PTS
