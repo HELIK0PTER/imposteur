@@ -115,6 +115,11 @@ export default function OnlineEntryPage() {
                 text-white placeholder:text-zinc-600 font-medium text-center text-lg
                 focus:outline-none focus:border-neon-yellow focus:shadow-[0_0_20px_rgba(250,204,21,0.2)]
                 transition-all duration-200"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && playerName.trim()) {
+                  handleCreateRoom();
+                }
+              }}
             />
           </div>
 
@@ -173,6 +178,11 @@ export default function OnlineEntryPage() {
                   className="w-full pl-9 pr-3 py-3 rounded-xl bg-zinc-950 border border-zinc-800
                     text-white placeholder:text-zinc-700 font-bold uppercase tracking-widest
                     focus:outline-none focus:border-neon-yellow transition-colors"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && roomCodeInput.trim()) {
+                      handleJoinRoom();
+                    }
+                  }}
                 />
               </div>
               <button

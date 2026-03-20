@@ -31,6 +31,7 @@ export default function OnlineRoomPage() {
   const isHost = myPlayer?.isHost ?? false;
 
   const [showWord, setShowWord] = useState(false);
+  const [showInGameSecret, setShowInGameSecret] = useState(false);
   const [hasVotedFor, setHasVotedFor] = useState<string | null>(null);
   const [typedWord, setTypedWord] = useState("");
 
@@ -73,6 +74,26 @@ export default function OnlineRoomPage() {
   return (
     <div className="flex flex-col items-center min-h-screen bg-dark text-white">
       <Header />
+      
+      {/* Aide-mémoire secret (visible en jeu) */}
+      {(phase === "turn_typing" || phase === "round_voting" || phase === "voting") && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40">
+          <button
+            onMouseDown={() => setShowInGameSecret(true)}
+            onMouseUp={() => setShowInGameSecret(false)}
+            onMouseLeave={() => setShowInGameSecret(false)}
+            onTouchStart={() => setShowInGameSecret(true)}
+            onTouchEnd={() => setShowInGameSecret(false)}
+            className="px-6 py-2 rounded-full bg-zinc-900/80 border border-violet-500/50 backdrop-blur-md text-xs font-bold uppercase tracking-widest text-violet-400 shadow-lg active:scale-95 transition-all select-none"
+          >
+            {showInGameSecret ? (
+              <span className="text-white">Ton Mot : <span className="text-neon-yellow">{role === "mrwhite" ? "🤫 Mr. White" : word}</span></span>
+            ) : (
+              "Maintenir pour voir mon secret"
+            )}
+          </button>
+        </div>
+      )}
       
       {/* Notifications flottantes (toujours visibles) */}
       <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none">
@@ -302,23 +323,19 @@ export default function OnlineRoomPage() {
                       <EyeOff className="w-5 h-5" />
                     </button>
                     
-                    <div className="space-y-2 relative z-10 w-full">
-                      <p className="text-violet-300 font-mono text-sm uppercase tracking-widest bg-dark/50 inline-block px-3 py-1 rounded-lg">
-                        Ton Rôle
+                    <div className="space-y-6 w-full">
+                       <p className="text-white font-mono text-sm uppercase tracking-widest bg-dark/50 inline-block px-3 py-1 rounded-lg">
+                        {role === "mrwhite" ? "Ton Rôle" : "Ton Mot Secret"}
                       </p>
-                      <h2 className="text-3xl font-black uppercase tracking-widest text-neon-yellow">
-                        {role === "civil" ? "Civil" : role === "impostor" ? "Imposteur" : "Mr. White"}
-                      </h2>
-                    </div>
-
-                    <div className="space-y-4 w-full">
-                       <p className="text-white font-mono text-sm uppercase tracking-widest">
-                        Ton Mot Secret
-                      </p>
-                      <div className="w-full bg-dark/80 p-4 rounded-xl border border-violet-500/30">
-                        <p className="text-2xl sm:text-3xl font-black text-white text-center break-words">
-                          {word}
+                      <div className="w-full bg-dark/80 p-6 rounded-xl border border-violet-500/30 shadow-inner">
+                        <p className="text-2xl sm:text-3xl font-black text-white text-center break-words uppercase tracking-tight">
+                          {role === "mrwhite" ? "🤫 Mr. White" : word}
                         </p>
+                        {role !== "mrwhite" && (
+                          <p className="text-[10px] font-mono text-violet-400 mt-4 uppercase tracking-tighter">
+                            Ne dis rien, joue-la fine.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </motion.div>
