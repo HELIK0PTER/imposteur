@@ -76,8 +76,14 @@ export default function OnlineRoomPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   
   const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
+    // URL propre sans paramètres (pas de ?name=...)
+    const url = window.location.origin + window.location.pathname;
+    
+    // Détection mobile simple pour prioriser le partage natif sur tel
+    // et la copie sur PC comme demandé par l'utilisateur.
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0);
+
+    if (isMobile && navigator.share) {
       try {
         await navigator.share({
           title: "Rejoins ma partie !",
@@ -85,10 +91,15 @@ export default function OnlineRoomPage() {
           url: url,
         });
       } catch (err) {
-        console.log("Erreur partage:", err);
+        // Fallback si l'utilisateur annule ou si ça fail
+        if (err instanceof Error && err.name !== "AbortError") {
+          navigator.clipboard.writeText(url);
+          setCopiedLink(true);
+          setTimeout(() => setCopiedLink(false), 2000);
+        }
       }
     } else {
-      // Fallback copy
+      // Sur PC ou si navigator.share n'est pas dispo
       navigator.clipboard.writeText(url);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
@@ -215,7 +226,7 @@ export default function OnlineRoomPage() {
 
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 mt-4 px-4 py-2 rounded-xl bg-violet-600/20 text-violet-400 font-bold text-xs uppercase tracking-widest hover:bg-violet-600/30 transition-colors border border-violet-500/30"
+                className="flex items-center gap-2 mt-4 px-4 py-2 rounded-xl bg-violet-600/20 text-violet-400 font-bold text-xs uppercase tracking-widest hover:bg-violet-600/30 transition-colors border border-violet-500/30 w-full max-w-[200px] justify-center"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 {copiedLink ? "Lien Copié !" : "Partager le lien"}
@@ -223,7 +234,7 @@ export default function OnlineRoomPage() {
 
               <button
                 onClick={() => setShowQR(true)}
-                className="flex items-center gap-2 mt-2 px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 font-medium text-xs hover:bg-zinc-700 transition-colors border border-zinc-700 font-mono uppercase tracking-tight"
+                className="flex items-center gap-2 mt-2 px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 font-medium text-xs hover:bg-zinc-700 transition-colors border border-zinc-700 font-mono uppercase tracking-tight w-full max-w-[200px] justify-center"
               >
                 <QrCode className="w-3.5 h-3.5" />
                 Afficher le QR Code
