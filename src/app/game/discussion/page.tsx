@@ -16,7 +16,8 @@ import {
   Users,
   Swords,
   Skull,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
@@ -42,7 +43,7 @@ export default function DiscussionPage() {
   const handleNewGame = () => {
     playPop();
     resetGame();
-    router.push("/");
+    router.push("/local");
   };
 
   /** Éliminer un joueur */
@@ -144,6 +145,18 @@ export default function DiscussionPage() {
               <RotateCcw className="w-5 h-5" />
               Nouvelle Partie
             </span>
+          </button>
+
+          <button
+            onClick={() => {
+              playPop();
+              resetGame();
+              router.push("/local");
+            }}
+            className="flex items-center justify-center gap-2 text-sm text-zinc-500 hover:text-red-400 font-mono uppercase font-bold transition-all duration-200 mt-2 hover:bg-red-500/10 p-2 rounded-lg w-full"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Quitter le gamos
           </button>
         </div>
       </main>

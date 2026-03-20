@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "@/hooks/usePartySocket";
 import { useEffect, useState } from "react";
-import { Users, Play, Eye, EyeOff, Gavel, Skull, Copy, QrCode, X } from "lucide-react";
+import { Users, Play, Eye, EyeOff, Gavel, Skull, Copy, QrCode, X, ArrowLeft } from "lucide-react";
 import QRCode from "react-qr-code";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +14,7 @@ export default function OnlineRoomPage() {
   const params = useParams();
   
   const [playerName, setPlayerName] = useState<string | null>(null);
+  const [pid, setPid] = useState<string>("");
   const roomCode = params.roomCode as string;
 
   useEffect(() => {
@@ -21,11 +22,18 @@ export default function OnlineRoomPage() {
       const nameFromUrl = searchParams.get("name");
       const nameFromStorage = localStorage.getItem("imposteur_player_name");
       setPlayerName(nameFromUrl || nameFromStorage);
+
+      let savedPid = localStorage.getItem("imposteur_pid");
+      if (!savedPid) {
+        savedPid = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        localStorage.setItem("imposteur_pid", savedPid);
+      }
+      setPid(savedPid);
     }
   }, [searchParams]);
 
-  const { gameState, startGame, vote, startTurn, submitWord, voteRoundEnd, forceRestart, updatePlayerName } = useGameSocket(roomCode, playerName || "");
-  const { phase, players, role, word, myId, turnOrder, currentTurnIndex, roundWords, roundVotes, currentRound, notifications } = gameState;
+  const { gameState, startGame, vote, startTurn, submitWord, voteRoundEnd, forceRestart, updatePlayerName, endGame } = useGameSocket(roomCode, playerName || "", pid);
+  const { phase, players, role, word, myId, turnOrder, currentTurnIndex, roundWords, roundVotes, currentRound, notifications, isGameOver } = gameState;
 
   const myPlayer = players.find(p => p.id === myId);
   const isHost = myPlayer?.isHost ?? false;
@@ -250,6 +258,14 @@ export default function OnlineRoomPage() {
                     En attente que l'hôte lance la partie...
                   </p>
                )}
+
+               <button
+                 onClick={() => router.push("/online")}
+                 className="w-full py-3 mt-2 flex items-center justify-center gap-2 text-zinc-500 hover:text-white font-mono text-xs uppercase tracking-widest transition-colors"
+               >
+                 <ArrowLeft className="w-4 h-4" />
+                 Quitter le salon
+               </button>
             </section>
 
             {/* Modal QR Code (Lobby only) */}
@@ -323,7 +339,7 @@ export default function OnlineRoomPage() {
                       <EyeOff className="w-5 h-5" />
                     </button>
                     
-                    <div className="space-y-6 w-full">
+                    <div className="space-y-6 w-full flex flex-col items-center">
                        <p className="text-white font-mono text-sm uppercase tracking-widest bg-dark/50 inline-block px-3 py-1 rounded-lg">
                         {role === "mrwhite" ? "Ton Rôle" : "Ton Mot Secret"}
                       </p>
@@ -645,7 +661,7 @@ export default function OnlineRoomPage() {
             </div>
 
             <div className="w-full mt-4 flex flex-col gap-3">
-                {players.length >= 3 && (
+                {!isGameOver && players.length >= 3 && (
                   <>
                     <div className="w-full bg-zinc-900 rounded-full h-2 overflow-hidden border border-zinc-800 relative">
                       <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 30, ease: "linear" }} className="absolute left-0 top-0 h-full bg-neon-yellow" />
@@ -653,14 +669,114 @@ export default function OnlineRoomPage() {
                     <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Relance dans 30 secondes...</p>
                   </>
                 )}
-               <div className="flex gap-4 mt-4 w-full">
-                 <button onClick={() => router.push("/online")} className="flex-1 py-3 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-all">Quitter</button>
-                 {isHost && players.length >= 3 && (
-                   <button onClick={() => forceRestart()} className="flex-1 py-3 border border-violet-500 bg-violet-600/20 hover:bg-violet-600/40 text-violet-400 font-bold rounded-xl transition-all">Relancer direct</button>
+               <div className="flex flex-col gap-3 mt-4 w-full">
+                 <div className="flex gap-4 w-full">
+                   <button onClick={() => router.push("/online")} className="flex-1 py-3 border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl transition-all">Quitter</button>
+                   {isHost && players.length >= 3 && !isGameOver && (
+                     <button onClick={() => forceRestart()} className="flex-1 py-3 border border-violet-500 bg-violet-600/20 hover:bg-violet-600/40 text-violet-400 font-bold rounded-xl transition-all">Relancer direct</button>
+                   )}
+                 </div>
+                 {isHost && !isGameOver && (
+                   <button 
+                     onClick={() => endGame()} 
+                     className="w-full py-3 border-2 border-dashed border-red-500/50 hover:border-red-500 bg-red-500/5 hover:bg-red-500/10 text-red-500 text-xs font-mono uppercase tracking-widest rounded-xl transition-all"
+                   >
+                     Mettre fin à la partie
+                   </button>
                  )}
                </div>
             </div>
           </motion.main>
+        )}
+      </AnimatePresence>
+
+      {/* Podium Final Overlay */}
+      <AnimatePresence>
+        {isGameOver && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6"
+          >
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-violet-600/20 blur-[120px] rounded-full" />
+              <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-neon-yellow/20 blur-[120px] rounded-full" />
+            </div>
+
+            <Header />
+
+            <motion.div 
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="w-full max-w-lg mt-8 text-center space-y-8 z-10"
+            >
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black uppercase tracking-tighter text-white">🏆 Classement Final 🏆</h2>
+                <p className="text-zinc-500 font-mono text-sm tracking-widest uppercase">La France a ses champions</p>
+              </div>
+
+              {/* Podium */}
+              <div className="flex items-end justify-center gap-2 h-48 mb-8">
+                {(() => {
+                  const sorted = [...players].sort((a,b) => (b.score || 0) - (a.score || 0));
+                  const podium = [
+                    { p: sorted[1], label: "2nd", color: "bg-zinc-400", height: "h-32", icon: "🥈" },
+                    { p: sorted[0], label: "1st", color: "bg-neon-yellow", height: "h-40", icon: "🥇" },
+                    { p: sorted[2], label: "3rd", color: "bg-orange-700", height: "h-24", icon: "🥉" }
+                  ].filter(x => x.p);
+
+                  return podium.map((item, idx) => (
+                    <motion.div 
+                      key={item.p!.id}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 * idx }}
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <span className="text-2xl">{item.icon}</span>
+                      <div className={`w-20 md:w-24 ${item.color} rounded-t-xl ${item.height} flex flex-col items-center justify-start pt-4 shadow-lg relative`}>
+                        <span className="text-zinc-900 font-black text-xs uppercase">{item.label}</span>
+                        <div className="mt-auto mb-4 flex flex-col items-center">
+                           <span className="text-zinc-900 font-bold text-[10px] md:text-xs truncate max-w-[80%]">{item.p?.name}</span>
+                           <span className="text-zinc-900 font-black text-[10px]">{item.p?.score} PTS</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ));
+                })()}
+              </div>
+
+              <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 space-y-3 max-h-48 overflow-y-auto">
+                <h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">Reste du peloton</h3>
+                {[...players].sort((a,b) => (b.score || 0) - (a.score || 0)).slice(3).map((p, idx) => (
+                  <div key={p.id} className="flex justify-between items-center px-2 py-1 border-b border-zinc-800/50 last:border-0">
+                    <span className="text-sm font-bold text-zinc-300">#{idx + 4} {p.name}</span>
+                    <span className="text-sm font-black text-neon-yellow">{p.score} PTS</span>
+                  </div>
+                ))}
+                {players.length <= 3 && (
+                   <p className="text-zinc-600 italic text-xs">C'est tout pour cette fois !</p>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => router.push("/online")} 
+                  className="flex-1 py-4 bg-zinc-900 border-2 border-zinc-800 text-white font-bold rounded-2xl hover:bg-zinc-800 transition-all"
+                >
+                  Quitter le gamos
+                </button>
+                {isHost && (
+                  <button 
+                    onClick={() => startGame()} 
+                    className="flex-1 py-4 bg-neon-yellow text-zinc-900 font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(250,204,21,0.3)]"
+                  >
+                    Nouvelle Game
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

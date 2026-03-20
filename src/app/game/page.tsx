@@ -129,7 +129,7 @@ export default function GamePage() {
           onClick={() => {
             playPop();
             useGameStore.getState().resetGame();
-            router.push("/");
+            router.push("/local");
           }}
           className="flex items-center gap-2 text-sm text-zinc-500 hover:text-red-400 hover:bg-red-500/10 p-2 brutal-border border-transparent hover:border-red-500
             font-mono uppercase font-bold transition-all duration-200 mt-4 brutal-active"

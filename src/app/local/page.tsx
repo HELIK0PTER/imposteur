@@ -11,7 +11,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, X, Ghost, Play, Users, AlertTriangle } from "lucide-react";
+import { UserPlus, X, Ghost, Play, Users, AlertTriangle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/gameStore";
 import { useMemeSounds } from "@/hooks/useMemeSounds";
@@ -219,6 +219,15 @@ export default function LobbyPage() {
             </span>
           </button>
         </section>
+
+        {/* Bouton retour accueil */}
+        <button
+          onClick={() => router.push("/")}
+          className="flex items-center gap-2 text-xs text-zinc-600 hover:text-white font-mono uppercase font-bold transition-all duration-200 mt-2 hover:bg-white/5 p-2 rounded-lg"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Retour au menu principal
+        </button>
       </main>
     </div>
   );

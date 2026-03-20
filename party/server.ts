@@ -19,6 +19,7 @@ type GameState = "lobby" | "in_game" | "turn_typing" | "round_voting" | "voting"
 
 export default class ImposteurServer implements Party.Server {
   players: Map<string, Player> = new Map();
+  persistentScores: Map<string, number> = new Map(); // pid -> score
   gameState: GameState = "lobby";
   votes: Map<string, string> = new Map(); // voterId -> targetId
 
@@ -31,15 +32,21 @@ export default class ImposteurServer implements Party.Server {
   eliminatedPlayerId: string | null = null;
   timerEnd: number | null = null;
   restartTimeout: NodeJS.Timeout | null = null;
+  isGameOver: boolean = false;
 
   constructor(readonly room: Party.Room) {}
 
   async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     const url = new URL(ctx.request.url);
-    const name = url.searchParams.get("name") || "Anonyme";
+    const rawName = url.searchParams.get("name") || "Anonyme";
+    const name = this.getUniqueName(rawName, conn.id);
+    const pid = url.searchParams.get("pid");
     
     // Si c'est le premier joueur, il est host
     const isHost = this.players.size === 0;
+    
+    // Récupérer le score persistant si on a un pid
+    const savedScore = pid ? (this.persistentScores.get(pid) || 0) : 0;
     
     const newPlayer: Player = {
       id: conn.id,
@@ -49,9 +56,12 @@ export default class ImposteurServer implements Party.Server {
       word: null,
       hasVoted: false,
       isEliminated: false,
-      score: 0,
+      score: savedScore,
       lastPoints: 0
     };
+    
+    // Stocker le pid dans l'objet connection (metadata non typée mais possible en JS/TS avec as any)
+    (conn as any).pid = pid;
 
     this.players.set(conn.id, newPlayer);
 
@@ -73,7 +83,8 @@ export default class ImposteurServer implements Party.Server {
       if (data.type === "update_name") {
         const player = this.players.get(sender.id);
         if (player) {
-          player.name = data.payload.name;
+          const newName = this.getUniqueName(data.payload.name, sender.id);
+          player.name = newName;
           this.broadcastState();
         }
       }
@@ -201,6 +212,18 @@ export default class ImposteurServer implements Party.Server {
           this.tryRestartGame();
         }
       }
+      
+      if (data.type === "end_game") {
+        const player = this.players.get(sender.id);
+        if (player?.isHost && this.gameState === "finished") {
+          if (this.restartTimeout) {
+            clearTimeout(this.restartTimeout);
+            this.restartTimeout = null;
+          }
+          this.isGameOver = true;
+          this.broadcastState();
+        }
+      }
 
     } catch (e) {
       console.error("Invalid message", e);
@@ -282,6 +305,7 @@ export default class ImposteurServer implements Party.Server {
     this.currentTurnIndex = 0;
     this.eliminatedPlayerId = null;
     this.timerEnd = null;
+    this.isGameOver = false;
 
     // Reset properties for all players before calculating activePlayerIds
     for (const p of this.players.values()) {
@@ -412,6 +436,15 @@ export default class ImposteurServer implements Party.Server {
         }
       }
 
+      // Mettre à jour les scores persistants
+      for (const conn of this.room.getConnections()) {
+        const player = this.players.get(conn.id);
+        const pid = (conn as any).pid;
+        if (player && pid) {
+          this.persistentScores.set(pid, player.score);
+        }
+      }
+
       this.broadcastState();
 
       // Démarrage du compte à rebours de 30s
@@ -436,8 +469,28 @@ export default class ImposteurServer implements Party.Server {
         eliminatedPlayerId: this.eliminatedPlayerId,
         timerEnd: this.timerEnd,
         votes: Array.from(this.votes.entries()),
+        isGameOver: this.isGameOver,
       }
     }));
+  }
+
+  /**
+   * Garantit un pseudo unique dans le salon
+   */
+  getUniqueName(requestedName: string, excludeId?: string): string {
+    const name = requestedName.trim() || "Anonyme";
+    let uniqueName = name;
+    let counter = 2;
+
+    const otherPlayers = Array.from(this.players.values())
+      .filter(p => p.id !== excludeId);
+
+    while (otherPlayers.some(p => p.name.toLowerCase() === uniqueName.toLowerCase())) {
+      uniqueName = `${name} (${counter})`;
+      counter++;
+    }
+
+    return uniqueName;
   }
 }
 

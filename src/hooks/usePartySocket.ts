@@ -18,10 +18,11 @@ export type OnlineGameState = {
   currentRound: number;
   eliminatedPlayerId?: string;
   timerEnd?: number;
+  isGameOver: boolean;
   notifications: Array<{ id: string; message: string; timestamp: number }>;
 };
 
-export function useGameSocket(roomCode: string, initialPlayerName: string) {
+export function useGameSocket(roomCode: string, initialPlayerName: string, pid: string = "") {
   const [gameState, setGameState] = useState<OnlineGameState>({
     phase: "lobby",
     players: [],
@@ -32,13 +33,17 @@ export function useGameSocket(roomCode: string, initialPlayerName: string) {
     currentRound: 1,
     votes: [],
     notifications: [],
+    isGameOver: false,
   });
 
   const socket = usePartySocket({
     // Pour l'instant, connexion locale en attendant de déployer PartyKit
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST || "127.0.0.1:1999",
     room: roomCode,
-    query: { name: initialPlayerName || "Anonyme" },
+    query: { 
+      name: initialPlayerName || "Anonyme",
+      pid: pid
+    },
     onMessage(evt) {
       try {
         const msg = JSON.parse(evt.data);
@@ -95,6 +100,7 @@ export function useGameSocket(roomCode: string, initialPlayerName: string) {
               eliminatedPlayerId: msg.payload.eliminatedPlayerId,
               timerEnd: msg.payload.timerEnd,
               votes: msg.payload.votes || [],
+              isGameOver: msg.payload.isGameOver || false,
             }));
             break;
         }
@@ -134,6 +140,10 @@ export function useGameSocket(roomCode: string, initialPlayerName: string) {
     socket.send(JSON.stringify({ type: "force_restart" }));
   }, [socket]);
 
+  const endGame = useCallback(() => {
+    socket.send(JSON.stringify({ type: "end_game" }));
+  }, [socket]);
+
   return {
     socket,
     gameState,
@@ -143,6 +153,7 @@ export function useGameSocket(roomCode: string, initialPlayerName: string) {
     voteRoundEnd,
     forceRestart,
     vote,
-    updatePlayerName
+    updatePlayerName,
+    endGame
   };
 }
