@@ -27,10 +27,15 @@ export default function OnlineEntryPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("imposteur_player_name");
+      if (savedName) setPlayerName(savedName);
+
       const urlParams = new URLSearchParams(window.location.search);
       const codeParam = urlParams.get("code");
       if (codeParam) {
-        setRoomCodeInput(codeParam.toUpperCase());
+        const upperCode = codeParam.toUpperCase();
+        setRoomCodeInput(upperCode);
+        localStorage.setItem("imposteur_last_room", upperCode);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
@@ -41,20 +46,25 @@ export default function OnlineEntryPage() {
       setError("Il te faut un pseudo, boloss 💀");
       return;
     }
+    localStorage.setItem("imposteur_player_name", playerName.trim());
     const code = generateRoomCode();
+    localStorage.setItem("imposteur_last_room", code);
     router.push(`/online/${code}?name=${encodeURIComponent(playerName.trim())}`);
   };
 
   const handleJoinRoom = () => {
-    if (!playerName.trim()) {
-      setError("Il te faut un pseudo, boloss 💀");
-      return;
-    }
     if (!roomCodeInput.trim() || roomCodeInput.length < 3) {
       setError("Entre un code de salon valide frère");
       return;
     }
-    router.push(`/online/${roomCodeInput.toUpperCase().trim()}?name=${encodeURIComponent(playerName.trim())}`);
+    const cleanCode = roomCodeInput.toUpperCase().trim();
+    localStorage.setItem("imposteur_last_room", cleanCode);
+    if (playerName.trim()) {
+      localStorage.setItem("imposteur_player_name", playerName.trim());
+      router.push(`/online/${cleanCode}?name=${encodeURIComponent(playerName.trim())}`);
+    } else {
+      router.push(`/online/${cleanCode}`);
+    }
   };
 
   const handleScan = (result: any) => {
@@ -68,11 +78,13 @@ export default function OnlineEntryPage() {
       } catch (e) {
         // n'est pas une URL entière
       }
-      setRoomCodeInput(codeStr.toUpperCase());
+      const upperCode = codeStr.toUpperCase();
+      setRoomCodeInput(upperCode);
+      localStorage.setItem("imposteur_last_room", upperCode);
       setShowScanner(false);
       
       if (!playerName.trim()) {
-        setError("Code scanné ! N'oublie pas de renseigner ton pseudo d'abord.");
+        setError("Code scanné ! Tu peux rejoindre direct ou mettre ton pseudo d'abord.");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }

@@ -18,9 +18,10 @@ export type OnlineGameState = {
   currentRound: number;
   eliminatedPlayerId?: string;
   timerEnd?: number;
+  notifications: Array<{ id: string; message: string; timestamp: number }>;
 };
 
-export function useGameSocket(roomCode: string, playerName: string) {
+export function useGameSocket(roomCode: string, initialPlayerName: string) {
   const [gameState, setGameState] = useState<OnlineGameState>({
     phase: "lobby",
     players: [],
@@ -30,13 +31,14 @@ export function useGameSocket(roomCode: string, playerName: string) {
     roundVotes: [],
     currentRound: 1,
     votes: [],
+    notifications: [],
   });
 
   const socket = usePartySocket({
     // Pour l'instant, connexion locale en attendant de déployer PartyKit
     host: process.env.NEXT_PUBLIC_PARTYKIT_HOST || "127.0.0.1:1999",
     room: roomCode,
-    query: { name: playerName },
+    query: { name: initialPlayerName || "Anonyme" },
     onMessage(evt) {
       try {
         const msg = JSON.parse(evt.data);
@@ -46,9 +48,28 @@ export function useGameSocket(roomCode: string, playerName: string) {
             setGameState(s => ({ ...s, myId: msg.id }));
             break;
 
+          case "notification":
+            const newNotif = { id: Math.random().toString(36), message: msg.message, timestamp: Date.now() };
+            setGameState(s => ({
+              ...s,
+              notifications: [...s.notifications, newNotif].slice(-5) // Garde les 5 dernières
+            }));
+            // Supprimer après 5s
+            setTimeout(() => {
+              setGameState(s => ({
+                ...s,
+                notifications: s.notifications.filter(n => n.id !== newNotif.id)
+              }));
+            }, 5000);
+            break;
+
+          case "error":
+            alert(msg.message); // Simple alert for now
+            break;
+
           case "state_update":
             // On mappe le rôle du serveur vers celui de l'UI
-            const serverPlayer = msg.payload.players.find((p: any) => p.id === msg.payload.myId || p.id === gameState.myId);
+            const serverPlayer = msg.payload.players.find((p: any) => p.id === gameState.myId);
             
             // Mapping du rôle
             let mappedRole: Role | undefined = undefined;
@@ -89,6 +110,10 @@ export function useGameSocket(roomCode: string, playerName: string) {
     socket.send(JSON.stringify({ type: "start_game" }));
   }, [socket]);
 
+  const updatePlayerName = useCallback((name: string) => {
+    socket.send(JSON.stringify({ type: "update_name", payload: { name } }));
+  }, [socket]);
+
   const vote = useCallback((targetId: string) => {
     socket.send(JSON.stringify({ type: "vote_player", payload: { targetId } }));
   }, [socket]);
@@ -117,6 +142,7 @@ export function useGameSocket(roomCode: string, playerName: string) {
     submitWord,
     voteRoundEnd,
     forceRestart,
-    vote
+    vote,
+    updatePlayerName
   };
 }

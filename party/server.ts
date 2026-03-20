@@ -70,11 +70,25 @@ export default class ImposteurServer implements Party.Server {
       const data = JSON.parse(message);
 
 
+      if (data.type === "update_name") {
+        const player = this.players.get(sender.id);
+        if (player) {
+          player.name = data.payload.name;
+          this.broadcastState();
+        }
+      }
+
       if (data.type === "start_game") {
         const player = this.players.get(sender.id);
-        // Requires at least 3 players to start
-        if (player?.isHost && this.players.size >= 3) {
+        const hasAnonymous = Array.from(this.players.values()).some(p => p.name === "Anonyme" || !p.name.trim());
+        
+        if (player?.isHost && this.players.size >= 3 && !hasAnonymous) {
           this.startGame();
+        } else if (hasAnonymous) {
+          sender.send(JSON.stringify({
+            type: "error",
+            message: "Faut que tout le monde mette un blaze avant de lancer !"
+          }));
         }
       }
 
@@ -215,29 +229,46 @@ export default class ImposteurServer implements Party.Server {
   }
 
   onClose(conn: Party.Connection) {
-    // Remove the player if they disconnect
+    const playerWhoLeft = this.players.get(conn.id);
+    if (!playerWhoLeft) return;
+
+    // Remove the player
     this.players.delete(conn.id);
     this.votes.delete(conn.id);
 
     // If host left, assign a new host
     if (this.players.size > 0 && !Array.from(this.players.values()).some(p => p.isHost)) {
-      Array.from(this.players.values())[0].isHost = true;
+      const firstPlayer = Array.from(this.players.values())[0];
+      if (firstPlayer) firstPlayer.isHost = true;
     }
 
-    // Auto-end if less than 3 players remain during a game
-    if (this.players.size < 3 && this.gameState !== "lobby") {
-       if (this.restartTimeout) {
-         clearTimeout(this.restartTimeout);
-         this.restartTimeout = null;
-       }
-       this.gameState = "lobby";
-       for (const p of this.players.values()) {
-         p.role = null;
-         p.word = null;
-         p.hasVoted = false;
-         p.isEliminated = false;
-       }
-       this.votes.clear();
+    // Inform everyone
+    this.room.broadcast(JSON.stringify({
+      type: "notification",
+      message: `${playerWhoLeft.name} a quitté le gamos 💨`
+    }));
+
+    // Logic based on remaining players
+    if (this.gameState !== "lobby" && this.gameState !== "finished") {
+      if (this.players.size >= 3) {
+        // More than 2 players remain (>= 3): restart round, keep scores
+        this.room.broadcast(JSON.stringify({
+          type: "notification",
+          message: "Un joueur est parti, on relance la manche ! Les points sont gardés."
+        }));
+        this.startGame();
+      } else {
+        // 2 or fewer players remain: end game
+        this.gameState = "finished";
+        if (this.restartTimeout) {
+          clearTimeout(this.restartTimeout);
+          this.restartTimeout = null;
+        }
+        this.room.broadcast(JSON.stringify({
+          type: "notification",
+          message: "Pas assez de joueurs pour continuer, fin de la partie."
+        }));
+      }
     }
 
     this.broadcastState();
