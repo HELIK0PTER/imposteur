@@ -92,7 +92,7 @@ export default function OnlineRoomPage() {
             onMouseLeave={() => setShowInGameSecret(false)}
             onTouchStart={() => setShowInGameSecret(true)}
             onTouchEnd={() => setShowInGameSecret(false)}
-            className="w-full py-4 rounded-2xl bg-zinc-900/50 border-2 border-dashed border-violet-500/30 backdrop-blur-md text-sm font-bold uppercase tracking-widest text-violet-400 shadow-lg active:scale-95 transition-all select-none flex items-center justify-center gap-3"
+            className="w-full py-2.5 rounded-2xl bg-zinc-900/50 border-2 border-dashed border-violet-500/30 backdrop-blur-md text-sm font-bold uppercase tracking-widest text-violet-400 shadow-lg active:scale-95 transition-all select-none flex items-center justify-center gap-3"
           >
             {showInGameSecret ? (
               <span className="text-white flex items-center gap-2">
@@ -458,63 +458,91 @@ export default function OnlineRoomPage() {
           </motion.main>
         )}
 
-        {phase === "round_voting" && (
+         {phase === "round_voting" && (
           <motion.main 
             key="round_voting"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center w-full max-w-md px-4 mt-12 gap-8 text-center"
+            className="flex flex-col items-center w-full max-w-md px-4 mt-6 gap-6 text-center"
           >
-            <div className="w-16 h-16 rounded-full bg-violet-600/20 flex items-center justify-center">
-              <Gavel className="w-8 h-8 text-violet-400" />
-            </div>
-            <div className="space-y-2">
-               <h2 className="text-2xl font-black uppercase tracking-widest text-white">Fin du tour</h2>
-               <p className="text-zinc-400 font-mono text-sm px-4">Avez-vous repéré l'imposteur ou voulez-vous un mot de plus ?</p>
+            <div className="space-y-1">
+               <h2 className="text-xl font-black uppercase tracking-widest text-white">Fin du tour {currentRound}</h2>
+               <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-tighter italic">Analysez les mots avant de décider</p>
             </div>
 
-            {(() => {
-              const hasVoted = roundVotes.some(v => v[0] === myId);
-              if (!hasVoted) return (
-                <div className="flex flex-col gap-4 w-full">
-                   <button 
-                     onClick={() => voteRoundEnd(true)}
-                     className="w-full py-4 rounded-xl border-2 border-red-500 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold uppercase tracking-wider transition-all"
-                   >
-                     Passer au vote final
-                   </button>
-                   <button 
-                     onClick={() => voteRoundEnd(false)}
-                     className="w-full py-4 rounded-xl border-2 border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-wider transition-all"
-                   >
-                     Nouveau tour
-                   </button>
-                </div>
-              );
-              return (
-                <div className="w-full p-8 rounded-2xl bg-zinc-900 border border-zinc-800 mt-4">
-                   <p className="text-neon-yellow font-bold text-lg mb-2">Choix enregistré !</p>
-                   <p className="text-zinc-500 font-mono text-sm">
-                     En attente des autres... ({roundVotes.length}/{players.length})
-                   </p>
-                </div>
-              );
-            })()}
-
-            <div className="w-full mt-8 text-left">
-               <h3 className="text-xs uppercase font-mono tracking-widest text-zinc-500 mb-4 text-center">Rappel des mots</h3>
-               <div className="flex flex-wrap gap-2 justify-center">
-                 {roundWords.filter(rw => rw.round === currentRound).map((rw, i) => {
-                   const p = players.find(x => x.id === rw.playerId);
+            {/* Priorité aux mots */}
+            <div className="w-full space-y-3">
+               <div className="flex items-center gap-2 justify-center text-zinc-500 mb-2">
+                 <div className="h-px grow bg-zinc-800" />
+                 <span className="text-[10px] font-mono uppercase tracking-widest">Récapitulatif</span>
+                 <div className="h-px grow bg-zinc-800" />
+               </div>
+               <div className="grid grid-cols-1 gap-2">
+                 {players.map((p) => {
+                   const words = roundWords.filter(rw => rw.playerId === p.id);
+                   if (words.length === 0) return null;
                    return (
-                     <div key={i} className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-2">
-                       <span className="text-zinc-500 text-xs">{p?.name} :</span>
-                       <span className="text-white font-bold text-sm">{rw.word}</span>
+                     <div key={p.id} className="flex justify-between items-center p-3 bg-zinc-900/80 border border-zinc-800 rounded-xl">
+                       <span className="font-bold text-sm text-zinc-400">{p.name}</span>
+                       <div className="flex gap-1 flex-wrap justify-end">
+                         {words.map((w, i) => (
+                           <span key={i} className="px-2 py-1 bg-dark text-neon-yellow rounded text-xs font-black border border-neon-yellow/10">
+                             {w.word}
+                           </span>
+                         ))}
+                       </div>
                      </div>
                    );
                  })}
                </div>
+            </div>
+
+            {/* Boutons en dessous */}
+            <div className="w-full mt-4 space-y-4">
+              <div className="p-4 rounded-xl bg-violet-600/5 border border-violet-500/20 mb-4">
+                 <p className="text-sm font-bold text-white uppercase tracking-wide">On fait quoi ?</p>
+              </div>
+
+              {(() => {
+                const hasVoted = roundVotes.some(v => v[0] === myId);
+                if (!hasVoted) return (
+                  <div className="flex flex-col gap-3 w-full">
+                     <button 
+                       onClick={() => voteRoundEnd(true)}
+                       className="w-full py-4 rounded-xl border-2 border-red-500 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase tracking-widest text-sm transition-all brutal-active"
+                     >
+                       Passer au vote final
+                     </button>
+                     <button 
+                       onClick={() => voteRoundEnd(false)}
+                       className="w-full py-4 rounded-xl border-2 border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-white font-black uppercase tracking-widest text-sm transition-all brutal-active"
+                     >
+                       Nouveau tour
+                     </button>
+                  </div>
+                );
+                return (
+                  <div className="w-full p-6 rounded-2xl bg-zinc-900 border border-violet-500/30 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                     <p className="text-neon-yellow font-black text-lg mb-1 uppercase">Choix enregistré !</p>
+                     <div className="flex items-center justify-center gap-2">
+                        <div className="flex -space-x-1">
+                          {roundVotes.map(([voterId]) => {
+                            const voter = players.find(x => x.id === voterId);
+                            return (
+                              <div key={voterId} className="w-6 h-6 rounded-full bg-violet-500 border-2 border-zinc-900 flex items-center justify-center text-[10px] font-black text-white">
+                                {voter?.name.substring(0, 1).toUpperCase()}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest">
+                          ({roundVotes.length}/{players.length} joueurs)
+                        </p>
+                     </div>
+                  </div>
+                );
+              })()}
             </div>
           </motion.main>
         )}
