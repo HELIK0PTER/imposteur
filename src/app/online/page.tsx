@@ -143,7 +143,7 @@ export default function OnlineEntryPage() {
               bg-zinc-900/50 border-2 border-violet-600/50 hover:border-violet-500
               hover:bg-violet-600/10 transition-all duration-300 group relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-linear-to-br from-violet-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <Users className="w-8 h-8 text-violet-400 group-hover:scale-110 transition-transform" />
             <div className="text-center font-bold">
               <h3 className="text-white text-lg">Créer un salon</h3>

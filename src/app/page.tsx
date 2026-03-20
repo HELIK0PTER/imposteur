@@ -33,7 +33,7 @@ export default function LandingPage() {
               brutal-border brutal-shadow-violet brutal-active bg-zinc-900 border-2 border-violet-600
               hover:bg-violet-600/10 transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-br from-violet-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             <Users className="w-14 h-14 text-violet-400 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-3" />
             <div className="text-center font-bold z-10">
               <h2 className="text-white text-2xl md:text-3xl uppercase tracking-widest mb-2 font-black">
@@ -53,7 +53,7 @@ export default function LandingPage() {
               brutal-border brutal-shadow-zinc brutal-active bg-zinc-900 border-2 border-neon-yellow/80
               hover:bg-neon-yellow/10 transition-all duration-300 overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-neon-yellow/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-br from-neon-yellow/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             <Wifi className="w-14 h-14 text-neon-yellow group-hover:scale-110 transition-transform duration-300 group-hover:-rotate-3" />
             <div className="text-center font-bold z-10">
               <h2 className="text-white text-2xl md:text-3xl uppercase tracking-widest mb-2 font-black">

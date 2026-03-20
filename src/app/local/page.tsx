@@ -208,7 +208,7 @@ export default function LobbyPage() {
               transition-all duration-300
               ${
                 canStart
-                  ? "bg-gradient-to-r from-violet-600 to-neon-yellow text-zinc-900"
+                  ? "bg-linear-to-r from-violet-600 to-neon-yellow text-zinc-900"
                   : "bg-zinc-800 text-zinc-600 cursor-not-allowed opacity-50 brutal-shadow-zinc"
               }
             `}

@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { useGameSocket } from "@/hooks/usePartySocket";
 import { useEffect, useState } from "react";
-import { Users, Play, Eye, EyeOff, Gavel, Skull, Copy, QrCode, X, ArrowLeft } from "lucide-react";
+import { Users, Play, Eye, EyeOff, Gavel, Skull, Copy, QrCode, X, ArrowLeft, Share2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import Header from "@/components/Header";
 import { motion, AnimatePresence } from "framer-motion";
@@ -73,6 +73,28 @@ export default function OnlineRoomPage() {
 
   // Pour copier le code du salon
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Rejoins ma partie !",
+          text: "Réflexion et trahison : rejoins ma partie de La France à l'Imposteur !",
+          url: url,
+        });
+      } catch (err) {
+        console.log("Erreur partage:", err);
+      }
+    } else {
+      // Fallback copy
+      navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
     setCopied(true);
@@ -148,8 +170,8 @@ export default function OnlineRoomPage() {
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter" && tempName.trim()) {
-                  updatePlayerName(tempName.trim());
                   localStorage.setItem("imposteur_player_name", tempName.trim());
+                  window.location.reload();
                 }
               }}
             />
@@ -157,8 +179,8 @@ export default function OnlineRoomPage() {
             <button 
               onClick={() => {
                 if (tempName.trim()) {
-                  updatePlayerName(tempName.trim());
                   localStorage.setItem("imposteur_player_name", tempName.trim());
+                  window.location.reload();
                 }
               }}
               disabled={!tempName.trim()}
@@ -192,10 +214,18 @@ export default function OnlineRoomPage() {
               {copied && <span className="text-green-400 text-xs font-mono mt-1">Copié !</span>}
 
               <button
-                onClick={() => setShowQR(true)}
-                className="flex items-center gap-2 mt-2 px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 font-medium text-sm hover:bg-zinc-700 transition-colors border border-zinc-700"
+                onClick={handleShare}
+                className="flex items-center gap-2 mt-4 px-4 py-2 rounded-xl bg-violet-600/20 text-violet-400 font-bold text-xs uppercase tracking-widest hover:bg-violet-600/30 transition-colors border border-violet-500/30"
               >
-                <QrCode className="w-4 h-4" />
+                <Share2 className="w-3.5 h-3.5" />
+                {copiedLink ? "Lien Copié !" : "Partager le lien"}
+              </button>
+
+              <button
+                onClick={() => setShowQR(true)}
+                className="flex items-center gap-2 mt-2 px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 font-medium text-xs hover:bg-zinc-700 transition-colors border border-zinc-700 font-mono uppercase tracking-tight"
+              >
+                <QrCode className="w-3.5 h-3.5" />
                 Afficher le QR Code
               </button>
             </div>
@@ -247,7 +277,7 @@ export default function OnlineRoomPage() {
                       transition-all duration-300
                       ${
                         players.length >= 3
-                          ? "bg-gradient-to-r from-violet-600 to-neon-yellow text-zinc-900 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-[0.98]"
+                          ? "bg-linear-to-r from-violet-600 to-neon-yellow text-zinc-900 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-[0.98]"
                           : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
                       }
                     `}
@@ -349,7 +379,7 @@ export default function OnlineRoomPage() {
                         {role === "mrwhite" ? "Ton Rôle" : "Ton Mot Secret"}
                       </p>
                       <div className="w-full bg-dark/80 p-6 rounded-xl border border-violet-500/30 shadow-inner">
-                        <p className="text-2xl sm:text-3xl font-black text-white text-center break-words uppercase tracking-tight">
+                        <p className="text-2xl sm:text-3xl font-black text-white text-center wrap-break-word uppercase tracking-tight">
                           {role === "mrwhite" ? "🤫 Mr. White" : word}
                         </p>
                         {role !== "mrwhite" && (
