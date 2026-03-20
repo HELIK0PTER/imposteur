@@ -36,33 +36,47 @@ export default class ImposteurServer implements Party.Server {
 
   constructor(readonly room: Party.Room) {}
 
-  async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
+    async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     const url = new URL(ctx.request.url);
     const rawName = url.searchParams.get("name") || "Anonyme";
-    const name = this.getUniqueName(rawName, conn.id);
     const pid = url.searchParams.get("pid");
     
-    // Si c'est le premier joueur, il est host
-    const isHost = this.players.size === 0;
-    
-    // Récupérer le score persistant si on a un pid
+    // Rechercher si un joueur avec le même pid est déjà là (pour transfert de host/stats)
+    let existingPlayer: Player | null = null;
+    let oldConnId: string | null = null;
+    if (pid) {
+      for (const [id, p] of this.players.entries()) {
+        const connPid = (this.room.getConnection(id) as any)?.pid;
+        if (connPid === pid) {
+          existingPlayer = p;
+          oldConnId = id;
+          break;
+        }
+      }
+    }
+
+    // Si on a trouvé l'ancien, on le dégage d'abord pour prendre sa place proprement
+    if (existingPlayer && oldConnId) {
+      this.players.delete(oldConnId);
+    }
+
+    const uniqueName = this.getUniqueName(rawName, conn.id);
+    const isHost = existingPlayer ? existingPlayer.isHost : (this.players.size === 0);
     const savedScore = pid ? (this.persistentScores.get(pid) || 0) : 0;
     
     const newPlayer: Player = {
       id: conn.id,
-      name,
+      name: uniqueName,
       isHost,
-      role: null,
-      word: null,
-      hasVoted: false,
-      isEliminated: false,
+      role: existingPlayer ? existingPlayer.role : null,
+      word: existingPlayer ? existingPlayer.word : null,
+      hasVoted: existingPlayer ? existingPlayer.hasVoted : false,
+      isEliminated: existingPlayer ? existingPlayer.isEliminated : false,
       score: savedScore,
-      lastPoints: 0
+      lastPoints: existingPlayer ? existingPlayer.lastPoints : 0
     };
     
-    // Stocker le pid dans l'objet connection (metadata non typée mais possible en JS/TS avec as any)
     (conn as any).pid = pid;
-
     this.players.set(conn.id, newPlayer);
 
     // Envoyer son ID au joueur pour qu'il se reconnaisse

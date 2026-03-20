@@ -21,7 +21,8 @@ export default function OnlineRoomPage() {
     if (typeof window !== "undefined") {
       const nameFromUrl = searchParams.get("name");
       const nameFromStorage = localStorage.getItem("imposteur_player_name");
-      setPlayerName(nameFromUrl || nameFromStorage);
+      // Priorité au stockage local si l'utilisateur a déjà choisi un nom
+      setPlayerName(nameFromStorage || nameFromUrl);
 
       let savedPid = localStorage.getItem("imposteur_pid");
       if (!savedPid) {
@@ -65,7 +66,7 @@ export default function OnlineRoomPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setJoinUrl(`${window.location.origin}/online?code=${roomCode}`);
+      setJoinUrl(`https://imposteur-two.vercel.app/online/${roomCode}`);
     }
   }, [roomCode]);
 
@@ -165,7 +166,7 @@ export default function OnlineRoomPage() {
 
       {/* Modal Fixation du Pseudo (toujours visible si nécessaire) */}
       {showNameModal && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10svh] pb-8 bg-black/90 p-4 overflow-y-auto sm:items-center sm:pt-0">
+        <div className="fixed inset-0 z-100 flex items-start justify-center pt-[10svh] pb-8 bg-black/90 p-4 overflow-y-auto sm:items-center sm:pt-0">
           <motion.div 
              initial={{ opacity: 0, scale: 0.95 }}
              animate={{ opacity: 1, scale: 1 }}
