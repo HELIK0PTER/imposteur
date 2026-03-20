@@ -27,6 +27,14 @@ body {
   /* Anti-aliasing brutal */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Mobile scrolling fix */
+  overscroll-behavior: none;
+  min-height: 100%;
+}
+
+html {
+  height: 100%;
+  overscroll-behavior: none;
 }
 
 /* ===========================

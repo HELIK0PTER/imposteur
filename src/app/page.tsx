@@ -16,7 +16,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-dark overflow-hidden relative">
+    <div className="flex flex-col items-center min-h-svh bg-dark overflow-hidden relative">
       <Header />
 
       <main className="flex flex-col items-center w-full max-w-lg px-4 pb-12 gap-8 mt-12 flex-1 justify-center z-10">

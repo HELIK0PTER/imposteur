@@ -58,7 +58,7 @@ export default function LobbyPage() {
   const canStart = players.length >= 3;
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-dark">
+    <div className="flex flex-col items-center min-h-svh bg-dark">
       <Header size="small" />
 
       <main className="flex flex-col items-center w-full max-w-lg px-4 pb-12 gap-8">

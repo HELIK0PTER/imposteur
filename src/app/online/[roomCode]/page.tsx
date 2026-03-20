@@ -80,7 +80,7 @@ export default function OnlineRoomPage() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-dark text-white">
+    <div className="flex flex-col items-center min-h-svh bg-dark text-white">
       <Header size="small" />
       
       {/* Aide-mémoire secret (visible en jeu) - Maintenant en flux relatif */}
