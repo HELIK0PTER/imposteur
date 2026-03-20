@@ -57,7 +57,7 @@ export default function GamePage() {
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-dark">
-      <Header />
+      <Header size="small" />
 
       <main className="flex flex-col items-center w-full max-w-lg px-4 pb-12 gap-6">
         {/* Instructions */}

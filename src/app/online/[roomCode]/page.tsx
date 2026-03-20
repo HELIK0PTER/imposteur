@@ -81,23 +81,28 @@ export default function OnlineRoomPage() {
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-dark text-white">
-      <Header />
+      <Header size="small" />
       
-      {/* Aide-mémoire secret (visible en jeu) */}
+      {/* Aide-mémoire secret (visible en jeu) - Maintenant en flux relatif */}
       {(phase === "turn_typing" || phase === "round_voting" || phase === "voting") && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40">
+        <div className="w-full max-w-lg px-4 mb-4">
           <button
             onMouseDown={() => setShowInGameSecret(true)}
             onMouseUp={() => setShowInGameSecret(false)}
             onMouseLeave={() => setShowInGameSecret(false)}
             onTouchStart={() => setShowInGameSecret(true)}
             onTouchEnd={() => setShowInGameSecret(false)}
-            className="px-6 py-2 rounded-full bg-zinc-900/80 border border-violet-500/50 backdrop-blur-md text-xs font-bold uppercase tracking-widest text-violet-400 shadow-lg active:scale-95 transition-all select-none"
+            className="w-full py-4 rounded-2xl bg-zinc-900/50 border-2 border-dashed border-violet-500/30 backdrop-blur-md text-sm font-bold uppercase tracking-widest text-violet-400 shadow-lg active:scale-95 transition-all select-none flex items-center justify-center gap-3"
           >
             {showInGameSecret ? (
-              <span className="text-white">Ton Mot : <span className="text-neon-yellow">{role === "mrwhite" ? "🤫 Mr. White" : word}</span></span>
+              <span className="text-white flex items-center gap-2">
+                TON MOT : <span className="text-neon-yellow text-lg">{role === "mrwhite" ? "🤫 Mr. White" : word}</span>
+              </span>
             ) : (
-              "Maintenir pour voir mon secret"
+              <>
+                <Eye className="w-5 h-5 opacity-50" />
+                Maintenir pour voir mon secret
+              </>
             )}
           </button>
         </div>
