@@ -47,16 +47,21 @@ export default function OnlineRoomPage() {
   const [joinUrl, setJoinUrl] = useState("");
   const [tempName, setTempName] = useState("");
   const [showNameModal, setShowNameModal] = useState(false);
+  const [isManualNameModal, setIsManualNameModal] = useState(false);
 
-  // Vérifier si on doit afficher le modal de nom
+  // Vérifier si on doit afficher le modal de nom automatiquement (si Anonyme)
   useEffect(() => {
+    // Si l'utilisateur l'a ouvert manuellement, on ne gère pas l'auto-ouverture/fermeture ici
+    if (isManualNameModal) return;
+
     const myP = players.find(p => p.id === myId);
     if (myP && (myP.name === "Anonyme" || !myP.name.trim())) {
       setShowNameModal(true);
     } else if (myP) {
+      // Si on a un pseudo valide et qu'on n'est pas en train d'éditer, on peut fermer
       setShowNameModal(false);
     }
-  }, [players, myId]);
+  }, [players, myId, isManualNameModal]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -160,11 +165,11 @@ export default function OnlineRoomPage() {
 
       {/* Modal Fixation du Pseudo (toujours visible si nécessaire) */}
       {showNameModal && (
-        <div className="fixed inset-0 z-100 flex items-start justify-center pt-[10svh] pb-8 bg-black/95 backdrop-blur-md p-4 overflow-y-auto sm:items-center sm:pt-0">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10svh] pb-8 bg-black/90 p-4 overflow-y-auto sm:items-center sm:pt-0">
           <motion.div 
-             initial={{ opacity: 0, scale: 0.9 }}
+             initial={{ opacity: 0, scale: 0.95 }}
              animate={{ opacity: 1, scale: 1 }}
-             className="w-full max-w-sm bg-zinc-900 border-2 border-violet-500 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-[0_0_60px_rgba(168,85,247,0.4)]"
+             className="w-full max-w-sm bg-zinc-900 border-2 border-violet-500 rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-6 shadow-[0_0_60px_rgba(168,85,247,0.3)]"
           >
             <div className="text-center space-y-2">
               <h3 className="text-white font-black uppercase tracking-widest text-xl">Ton Blaze ? 💀</h3>
@@ -198,6 +203,17 @@ export default function OnlineRoomPage() {
               className="w-full py-4 bg-neon-yellow text-zinc-900 font-black rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
             >
               C'EST PARTI
+            </button>
+            <button 
+              onClick={() => {
+                if (isManualNameModal) {
+                  setIsManualNameModal(false);
+                  setShowNameModal(false);
+                }
+              }}
+              className="mt-2 text-zinc-500 text-xs font-mono uppercase tracking-widest hover:text-white"
+            >
+              Annuler
             </button>
           </motion.div>
         </div>
@@ -270,9 +286,10 @@ export default function OnlineRoomPage() {
                           <button
                             onClick={() => {
                               setTempName(p.name || "");
+                              setIsManualNameModal(true);
                               setShowNameModal(true);
                             }}
-                            className="p-1 hover:bg-zinc-800 rounded transition-colors text-violet-400"
+                            className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors text-violet-400 border border-violet-500/10"
                             title="Modifier mon pseudo"
                           >
                             <Pencil className="w-3 h-3" />
